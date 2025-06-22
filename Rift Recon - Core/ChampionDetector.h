@@ -61,6 +61,9 @@ namespace LeagueRecorder {
 
         void debugShowResizedTemplates();
 
+		// Convert position to minimap coordinates
+        std::string classifyPosition(const cv::Rect& boundingBox, const cv::Size& frameSize);
+
         // Clear all templates from memory
         void clearTemplates();
 
@@ -94,15 +97,15 @@ namespace LeagueRecorder {
         // Map to track recently sent messages to avoid duplicates
         std::unordered_map<std::string, std::chrono::system_clock::time_point> m_lastMessageSent;
 
-        std::string classifyPosition(const cv::Rect& boundingBox, const cv::Size& frameSize);
-        cv::Point2f convertToNormalizedCoords(const cv::Rect& boundingBox, const cv::Size& frameSize);
-        std::string determineMapPosition(double normX, double normY);
-
         // Load a champion template
         bool loadChampionTemplate(const std::string& championName);
 
         // Process a template once for reuse
         void processTemplateOnce(const std::string& championName, const cv::Mat& originalTemplate);
+
+		// Convert a bounding box to normalized coordinates (0-1 range) then to minimap position
+        cv::Point2f convertToNormalizedCoords(const cv::Rect& boundingBox, const cv::Size& frameSize);
+        std::string determineMapPosition(double normX, double normY);
 
         // Update candidates from detections
         void updateCandidateDetection(const std::string& championName, const cv::Rect& boundingBox, double confidence);

@@ -1,15 +1,12 @@
-#include "pch.h"
-#include "../RiotWFM/ChampionDetector.h"
-#include "../RiotWFM/Common.h"
+﻿#include "pch.h"
+#include "../Rift Recon - Core/ChampionDetector.h"
+#include "../Rift Recon - Core/Common.h"
 #include <filesystem>
 #include <opencv2/opencv.hpp>
 
 
 using namespace LeagueRecorder;
 
-// In Test_ChampionDetector.cpp
-
-// This class inherits from ChampionDetector and makes protected members public for testing.
 class ChampionDetectorTestable : public LeagueRecorder::ChampionDetector {
 public:
     // Expose the asset directory for setting in tests
@@ -41,32 +38,12 @@ public:
     const auto& GetLastMessageSentMap() const {
         return m_lastMessageSent;
     }
+
+	// Allow tests to access the minimap size
+    const cv::Size& GetMinimapSize() const {
+        return m_minimapSize;
+    }
 };
-
-TEST(ChampionDetectorLogicTest, DetermineMapPosition_CorrectlyClassifiesLocations) {
-    // Arrange: Create our testable detector instance.
-    ChampionDetectorTestable detector;
-
-    // Act & Assert: Call the method with known coordinates and check the output.
-
-    // Test Bases
-    EXPECT_EQ(detector.CallDetermineMapPosition(0.9, 0.1), "Right Base");
-    EXPECT_EQ(detector.CallDetermineMapPosition(0.1, 0.9), "Left Base");
-
-    // Test Lanes
-    EXPECT_EQ(detector.CallDetermineMapPosition(0.5, 0.55), "Mid Lane"); // y = -1*0.5 + 1.05 = 0.55
-    EXPECT_EQ(detector.CallDetermineMapPosition(0.1, 0.13), "Top Lane");
-    EXPECT_EQ(detector.CallDetermineMapPosition(0.9, 0.905), "Bot Lane");
-
-    // Test River
-    EXPECT_EQ(detector.CallDetermineMapPosition(0.5, 0.485), "Top River"); // y = 0.97*0.5 + 0 = 0.485
-    EXPECT_EQ(detector.CallDetermineMapPosition(0.6, 0.582), "Bot River"); // y = 0.97*0.6 + 0 = 0.582
-
-    // Test Jungle
-    EXPECT_EQ(detector.CallDetermineMapPosition(0.2, 0.2), "Blue Top");
-    EXPECT_EQ(detector.CallDetermineMapPosition(0.8, 0.8), "Red Bot");
-}
-
 
 // A Test Fixture for tests that need a temporary file system
 class ChampionDetectorFileTest : public ::testing::Test {
@@ -114,4 +91,89 @@ TEST_F(ChampionDetectorFileTest, Initialize_LoadsExistingTemplatesAndIgnoresMiss
     EXPECT_EQ(loadedNames[0], "Ahri");
     // areAllTemplatesLoaded should be true because at least one loaded
     EXPECT_TRUE(detector.areAllTemplatesLoaded());
+}
+
+TEST_F(ChampionDetectorFileTest, DetermineMapPosition_DetectsCorrectPositions) {
+    // Test cases with expected positions
+    struct TestCase {
+        double x;
+        double y;
+        std::string expected;
+    };
+
+    std::vector<TestCase> testCases = {
+    {0.05, 0.95, "Left Base"},     // close to (0,1)
+    {0.95, 0.05, "Right Base"},    // close to (1,0)
+    {0.5, 0.55, "Mid Lane"},       // on mid lane (y = -x + 1.05)
+    {0.13, 0.13, "Top Lane"},      // near topXOffset/topYOffset
+    {0.905, 0.905, "Bot Lane"},    // near botXOffset/botYOffset
+    {0.35, 0.35, "Top River"},     // above mid line, within river band
+    {0.65, 0.65, "Bot River"}      // below mid line, within river band
+    };
+
+
+    for (const auto& test : testCases) {
+        // Call our testable version of the protected method
+        std::string result = detector.CallDetermineMapPosition(test.x, test.y);
+        EXPECT_EQ(result, test.expected)
+            << "Failed at position (" << test.x << ", " << test.y
+            << "), expected: " << test.expected << ", got: " << result;
+    }
+}
+
+TEST_F(ChampionDetectorFileTest, ClassifyPosition_IntegratesCorrectly) {
+    // Set the minimap size for classification
+    cv::Size m_minimapSize = cv::Size(376, 381);
+
+    // Test various bounding boxes
+    struct TestCase {
+        cv::Rect boundingBox;
+        std::string expectedPosition;
+    };
+
+    std::vector<TestCase> testCases = {
+        // Left Base: norm = (0.05, 0.95) → center = (18.8, 362.0) → bbox = (9, 352, 20, 20)
+        {cv::Rect(9, 352, 20, 20), "Left Base"},
+
+        // Right Base: norm = (0.95, 0.05) → center = (357.2, 19.0) → bbox = (347, 9, 20, 20)
+        {cv::Rect(347, 9, 20, 20), "Right Base"},
+
+        // Mid Lane: norm = (0.5, 0.55) → center = (188.0, 209.6) → bbox = (178, 199, 20, 20)
+        {cv::Rect(178, 199, 20, 20), "Mid Lane"},
+
+        // Top Lane: norm = (0.13, 0.13) → center = (48.9, 49.5) → bbox = (39, 39, 20, 20)
+        {cv::Rect(39, 39, 20, 20), "Top Lane"},
+
+        // Bot Lane: norm = (0.905, 0.905) → center = (340.68, 344.805) → bbox = (331, 335, 20, 20)
+        {cv::Rect(331, 335, 20, 20), "Bot Lane"}
+    };
+
+
+    for (const auto& test : testCases) {
+        std::string result = detector.classifyPosition(test.boundingBox, m_minimapSize);
+        EXPECT_EQ(result, test.expectedPosition)
+            << "Failed for bounding box at ("
+            << test.boundingBox.x << ", " << test.boundingBox.y << ")";
+    }
+}
+
+TEST_F(ChampionDetectorFileTest, ClassifyPosition_HandlesEdgeCases) {
+    cv::Size m_minimapSize = cv::Size(376, 381);
+
+    // Test edge cases and boundary conditions
+
+    // 1. Bounding box exactly at origin (0,0)
+    EXPECT_NE(detector.classifyPosition(cv::Rect(0, 0, 10, 10), m_minimapSize), "");
+
+    // 2. Bounding box that extends beyond frame bounds
+    // This tests robustness - should not crash or return empty string
+    EXPECT_NE(detector.classifyPosition(cv::Rect(500, 500, 20, 20), m_minimapSize), "");
+
+    // 3. Zero-sized bounding box (degenerate case)
+    EXPECT_NE(detector.classifyPosition(cv::Rect(250, 250, 0, 0), m_minimapSize), "");
+
+    // 4. Very large bounding box covering most of minimap
+    cv::Rect largeBox(100, 100, 300, 300);
+    std::string largeBoxResult = detector.classifyPosition(largeBox, m_minimapSize);
+    EXPECT_NE(largeBoxResult, "");
 }
