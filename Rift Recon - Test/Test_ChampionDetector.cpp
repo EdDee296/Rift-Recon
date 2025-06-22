@@ -39,12 +39,13 @@ public:
         return m_lastMessageSent;
     }
 
-	// Allow tests to access the minimap size
+    // Allow tests to access the minimap size
     const cv::Size& GetMinimapSize() const {
         return m_minimapSize;
     }
 };
 
+// Simple dependencies tests
 // A Test Fixture for tests that need a temporary file system
 class ChampionDetectorFileTest : public ::testing::Test {
 protected:
@@ -93,7 +94,10 @@ TEST_F(ChampionDetectorFileTest, Initialize_LoadsExistingTemplatesAndIgnoresMiss
     EXPECT_TRUE(detector.areAllTemplatesLoaded());
 }
 
-TEST_F(ChampionDetectorFileTest, DetermineMapPosition_DetectsCorrectPositions) {
+
+// Pure functional tests
+TEST(ChampionDetectorPositionTest, DetermineMapPosition_DetectsCorrectPositions) {
+    ChampionDetectorTestable detector;
     // Test cases with expected positions
     struct TestCase {
         double x;
@@ -121,7 +125,8 @@ TEST_F(ChampionDetectorFileTest, DetermineMapPosition_DetectsCorrectPositions) {
     }
 }
 
-TEST_F(ChampionDetectorFileTest, ClassifyPosition_IntegratesCorrectly) {
+TEST(ChampionDetectorPositionTest, ClassifyPosition_IntegratesCorrectly) {
+    ChampionDetectorTestable detector;
     // Set the minimap size for classification
     cv::Size m_minimapSize = cv::Size(376, 381);
 
@@ -157,7 +162,8 @@ TEST_F(ChampionDetectorFileTest, ClassifyPosition_IntegratesCorrectly) {
     }
 }
 
-TEST_F(ChampionDetectorFileTest, ClassifyPosition_HandlesEdgeCases) {
+TEST(ChampionDetectorPositionTest, ClassifyPosition_HandlesEdgeCases) {
+    ChampionDetectorTestable detector;
     cv::Size m_minimapSize = cv::Size(376, 381);
 
     // Test edge cases and boundary conditions
@@ -177,3 +183,5 @@ TEST_F(ChampionDetectorFileTest, ClassifyPosition_HandlesEdgeCases) {
     std::string largeBoxResult = detector.classifyPosition(largeBox, m_minimapSize);
     EXPECT_NE(largeBoxResult, "");
 }
+
+// Complex dependencies tests
