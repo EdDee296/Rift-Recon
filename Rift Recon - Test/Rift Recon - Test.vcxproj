@@ -141,6 +141,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Test_ChampionDetector.cpp" />
+    <ClCompile Include="Test_wsk.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rift Recon - Core\Rift Recon - Core.vcxproj">

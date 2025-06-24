@@ -183,5 +183,3 @@ TEST(ChampionDetectorPositionTest, ClassifyPosition_HandlesEdgeCases) {
     std::string largeBoxResult = detector.classifyPosition(largeBox, m_minimapSize);
     EXPECT_NE(largeBoxResult, "");
 }
-
-// Complex dependencies tests
