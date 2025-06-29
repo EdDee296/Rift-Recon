@@ -90,16 +90,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>D:\Projects\RiftRecon\RiftRecon\vcpkg_installed\x64-windows\x64-windows\include\opencv4;$(IncludePath)</IncludePath>
+    <IncludePath>D:\library\ffmpeg\ffmpeg-master-latest-win64-gpl-shared\include;D:\Projects\RiftRecon\RiftRecon\vcpkg_installed\x64-windows\x64-windows\include\opencv4;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\library\ffmpeg\ffmpeg-master-latest-win64-gpl-shared\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>D:\Projects\RiftRecon\RiftRecon\vcpkg_installed\x64-windows\x64-windows\include\opencv4;$(IncludePath)</IncludePath>
+    <IncludePath>D:\library\ffmpeg\ffmpeg-master-latest-win64-gpl-shared\include;D:\Projects\RiftRecon\RiftRecon\vcpkg_installed\x64-windows\x64-windows\include\opencv4;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\library\ffmpeg\ffmpeg-master-latest-win64-gpl-shared\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\Projects\RiftRecon\RiftRecon\vcpkg_installed\x64-windows\x64-windows\include\opencv4;$(IncludePath)</IncludePath>
+    <IncludePath>D:\library\ffmpeg\ffmpeg-master-latest-win64-gpl-shared\include;D:\Projects\RiftRecon\RiftRecon\vcpkg_installed\x64-windows\x64-windows\include\opencv4;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\library\ffmpeg\ffmpeg-master-latest-win64-gpl-shared\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>D:\Projects\RiftRecon\RiftRecon\vcpkg_installed\x64-windows\x64-windows\include\opencv4;$(IncludePath)</IncludePath>
+    <IncludePath>D:\library\ffmpeg\ffmpeg-master-latest-win64-gpl-shared\include;D:\Projects\RiftRecon\RiftRecon\vcpkg_installed\x64-windows\x64-windows\include\opencv4;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\library\ffmpeg\ffmpeg-master-latest-win64-gpl-shared\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>

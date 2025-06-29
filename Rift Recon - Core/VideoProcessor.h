@@ -28,6 +28,7 @@ namespace LeagueRecorder {
         void setMatchThreshold(double threshold);
         void setBufferingEnabled(bool enabled);    // New: enable/disable buffering
         void setBufferSize(size_t size);           // New: set buffer size (1-10 frames)
+        void setVideoSavingEnabled(bool enabled);  // New: enable/disable video saving
 
         // Handle manual capture region selection
         bool selectCaptureRegion();
@@ -71,6 +72,7 @@ namespace LeagueRecorder {
         size_t m_maxBufferSize;
         std::atomic<int> m_droppedFrames;
         bool m_useBuffering;                       // New: toggle buffering on/off
+        bool m_videoSavingEnabled;                 // New: toggle video saving on/off
 
         // Video writer and status
         std::string m_currentVideoFilename;

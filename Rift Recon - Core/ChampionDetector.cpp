@@ -683,6 +683,4 @@ namespace LeagueRecorder {
         return names;
     }
 
-    
-
 } // namespace LeagueRecorder

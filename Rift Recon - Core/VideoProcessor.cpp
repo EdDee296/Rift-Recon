@@ -15,7 +15,7 @@ namespace LeagueRecorder {
         , m_detector(detector)
         , m_targetFps(10.0)
         , m_matchThreshold(0.7)
-        , m_codec(cv::VideoWriter::fourcc('a', 'v', 'c', '1')) // H.264 codec
+        , m_codec(cv::VideoWriter::fourcc('M', 'J', 'P', 'G')) // MJPEG codec for AVI
         , m_shouldExit(false)
         , m_isRecording(false)
         , m_currentFps(0.0)
@@ -23,6 +23,7 @@ namespace LeagueRecorder {
         , m_maxBufferSize(3)  // 3-frame buffer
         , m_droppedFrames(0)
         , m_useBuffering(true)  // Enable buffering by default
+        , m_videoSavingEnabled(true)  // Enable video saving by default
     {
     }
 
@@ -45,16 +46,19 @@ namespace LeagueRecorder {
         // Generate a new filename
         m_currentVideoFilename = generateVideoFilename();
 
-        // Initialize video writer
-        /*
-        m_videoWriter.open(m_currentVideoFilename, m_codec, m_targetFps,
-            cv::Size(m_capture.getCaptureWidth(), m_capture.getCaptureHeight()), true);
+        // Initialize video writer only if video saving is enabled
+        if (m_videoSavingEnabled) {
+            m_videoWriter.open(m_currentVideoFilename, m_codec, m_targetFps,
+                cv::Size(m_capture.getCaptureWidth(), m_capture.getCaptureHeight()), true);
 
-        if (!m_videoWriter.isOpened()) {
-            LOG("[VideoProcessor] Could not open video file for write");
-            return false;
+            if (!m_videoWriter.isOpened()) {
+                LOG("[VideoProcessor] Could not open video file for write");
+                return false;
+            }
+            notifyStatus("Video saving enabled - saving to: " + m_currentVideoFilename);
+        } else {
+            notifyStatus("Video saving disabled - processing only");
         }
-        */
 
         // Clear the frame buffer
         clearFrameBuffer();
@@ -101,12 +105,10 @@ namespace LeagueRecorder {
 
         // Clean up resources if we were recording
         if (m_isRecording.exchange(false)) {
-            // Release the video writer
-            /*
-            if (m_videoWriter.isOpened()) {
+            // Release the video writer only if it was opened
+            if (m_videoSavingEnabled && m_videoWriter.isOpened()) {
                 m_videoWriter.release();
             }
-            */
 
             // Clear remaining frames in buffer
             if (m_useBuffering) {
@@ -155,22 +157,33 @@ namespace LeagueRecorder {
         notifyStatus("Buffer size set to " + std::to_string(m_maxBufferSize));
     }
 
+    void VideoProcessor::setVideoSavingEnabled(bool enabled) {
+        if (m_isRecording.load()) {
+            notifyStatus("Cannot change video saving mode while recording");
+            return;
+        }
+        m_videoSavingEnabled = enabled;
+        notifyStatus(enabled ? "Video saving enabled" : "Video saving disabled");
+    }
+
     bool VideoProcessor::selectCaptureRegion() {
         if (m_isRecording.load()) {
             // Pause recording temporarily
             bool result = m_capture.selectCaptureRegion();
             if (result) {
-                // Restart video writer with new dimensions
-                if (m_videoWriter.isOpened()) {
-                    m_videoWriter.release();
-                }
+                // Restart video writer with new dimensions only if video saving is enabled
+                if (m_videoSavingEnabled) {
+                    if (m_videoWriter.isOpened()) {
+                        m_videoWriter.release();
+                    }
 
-                m_videoWriter.open(m_currentVideoFilename, m_codec, m_targetFps,
-                    cv::Size(m_capture.getCaptureWidth(), m_capture.getCaptureHeight()), true);
+                    m_videoWriter.open(m_currentVideoFilename, m_codec, m_targetFps,
+                        cv::Size(m_capture.getCaptureWidth(), m_capture.getCaptureHeight()), true);
 
-                if (!m_videoWriter.isOpened()) {
-                    notifyStatus("Error: Could not reopen video file after region change");
-                    return false;
+                    if (!m_videoWriter.isOpened()) {
+                        notifyStatus("Error: Could not reopen video file after region change");
+                        return false;
+                    }
                 }
 
                 std::ostringstream message;
@@ -204,7 +217,7 @@ namespace LeagueRecorder {
         localtime_s(&timeinfo, &now_time_t);
 
         std::stringstream ss;
-        ss << "game_capture_" << std::put_time(&timeinfo, "%Y%m%d_%H%M%S") << ".mp4";
+        ss << "game_capture_" << std::put_time(&timeinfo, "%Y%m%d_%H%M%S") << ".avi";
         return ss.str();
     }
 
@@ -360,8 +373,10 @@ namespace LeagueRecorder {
                     // Run template matching to detect champions
                     cv::Mat processedFrame = m_detector.detectChampionsInFrame(frameToProcess, m_matchThreshold);
 
-                    // Write the processed frame to video file
-                    // m_videoWriter.write(processedFrame);
+                    // Write the processed frame to video file only if video saving is enabled
+                    if (m_videoSavingEnabled && m_videoWriter.isOpened()) {
+                        m_videoWriter.write(processedFrame);
+                    }
 
                     auto processingEndTime = std::chrono::high_resolution_clock::now();
                     double processingMs = std::chrono::duration<double, std::milli>(processingEndTime - processingStartTime).count();
@@ -386,11 +401,9 @@ namespace LeagueRecorder {
         }
 
         // Clean up at the end
-        /*
-        if (m_videoWriter.isOpened()) {
+        if (m_videoSavingEnabled && m_videoWriter.isOpened()) {
             m_videoWriter.release();
         }
-        */
     }
 
     void VideoProcessor::recordingThread() {
@@ -419,8 +432,10 @@ namespace LeagueRecorder {
                     // Run template matching to detect champions
                     cv::Mat processedFrame = m_detector.detectChampionsInFrame(bgrFrame, m_matchThreshold);
 
-                    // Write the processed frame to video file
-                    // m_videoWriter.write(processedFrame);
+                    // Write the processed frame to video file only if video saving is enabled
+                    if (m_videoSavingEnabled && m_videoWriter.isOpened()) {
+                        m_videoWriter.write(processedFrame);
+                    }
 
                     auto processingEndTime = std::chrono::high_resolution_clock::now();
                     double processingMs = std::chrono::duration<double, std::milli>(processingEndTime - captureEndTime).count();
@@ -495,11 +510,9 @@ namespace LeagueRecorder {
         }
 
         // Clean up at the end
-        /*
-        if (m_videoWriter.isOpened()) {
+        if (m_videoSavingEnabled && m_videoWriter.isOpened()) {
             m_videoWriter.release();
         }
-        */
     }
 
 } // namespace LeagueRecorder
