@@ -39,4 +39,4 @@ This is required because the current project file references that FFmpeg include
 
 ## Frontend
 
-This repo is backend only. For frontend setup/run, follow the instructions in the frontend repo.
+This repo is backend only. For frontend setup/run, follow the instructions in the [frontend repo](https://github.com/EdDee296/Rift-Recon-Frontend).
