@@ -32,9 +32,6 @@ cd ..
 ### 2.3 Install FFmpeg (required)
 
 - Download FFmpeg shared build (Windows x64)
-- Extract it to:
-
-`D:\library\ffmpeg\ffmpeg-master-latest-win64-gpl-shared`
 
 This is required because the current project file references that FFmpeg include/lib path directly.
 
