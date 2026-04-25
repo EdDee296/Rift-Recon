@@ -5,7 +5,7 @@
 namespace LeagueRecorder {
 
     ApplicationController::ApplicationController()
-        : m_videoProcessor(m_screenCapture, m_championDetector)
+        : m_gameCaptureEngine(m_screenCapture, m_championDetector)
         , m_shouldExit(false)
     {
     }
@@ -24,7 +24,7 @@ namespace LeagueRecorder {
             this->onGameEnded();
             });
 
-        m_videoProcessor.setStatusCallback([this](auto& status) {
+        m_gameCaptureEngine.setStatusCallback([this](auto& status) {
             this->onStatusUpdate(status);
             });
 
@@ -65,8 +65,8 @@ namespace LeagueRecorder {
         // Signal threads to stop
         m_shouldExit = true;
 
-        // Stop video processing first
-        m_videoProcessor.stopRecording("application shutdown");
+        // Stop game capture processing first
+        m_gameCaptureEngine.stopRecording("application shutdown");
 
         // Stop game monitoring
         m_gameMonitor.stop();
@@ -90,7 +90,7 @@ namespace LeagueRecorder {
         /*m_championDetector.debugShowResizedTemplates();*/
 
         // Start recording
-        if (m_videoProcessor.startRecording()) {
+        if (m_gameCaptureEngine.startRecording()) {
             LOG("[ApplicationController] Recording started");
         }
         else {
@@ -102,7 +102,7 @@ namespace LeagueRecorder {
         LOG("[ApplicationController] Game ended");
 
         // Stop recording
-        m_videoProcessor.stopRecording("game ended");
+        m_gameCaptureEngine.stopRecording("game ended");
 
         // Clear champion templates to save memory
         m_championDetector.clearTemplates();
@@ -113,7 +113,7 @@ namespace LeagueRecorder {
             // Check for left arrow key to stop recording
             //if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
             //    LOG("[ApplicationController] LEFT ARROW pressed - stopping current recording");
-            //    m_videoProcessor.stopRecording("manual stop");
+            //    m_gameCaptureEngine.stopRecording("manual stop");
 
             //    // Wait until key is released to avoid multiple stops
             //    while (GetAsyncKeyState(VK_LEFT) & 0x8000) {
@@ -124,7 +124,7 @@ namespace LeagueRecorder {
             // Check for down arrow key to select region
             if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
                 LOG("[ApplicationController] DOWN ARROW pressed - selecting capture region");
-                m_videoProcessor.selectCaptureRegion();
+                m_gameCaptureEngine.selectCaptureRegion();
 
                 // Wait until key is released to avoid multiple selections
                 while (GetAsyncKeyState(VK_DOWN) & 0x8000) {
@@ -149,7 +149,7 @@ namespace LeagueRecorder {
     }
 
     void ApplicationController::onStatusUpdate(const std::string& status) {
-        // Nothing extra to do here - already logged by VideoProcessor
+        // Nothing extra to do here - already logged by GameCaptureEngine
     }
 
 } // namespace LeagueRecorder

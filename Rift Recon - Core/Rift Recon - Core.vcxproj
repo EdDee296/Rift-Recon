@@ -22,9 +22,9 @@
     <ClCompile Include="ApplicationController.cpp" />
     <ClCompile Include="ChampionDetector.cpp" />
     <ClCompile Include="DXGIFullscreenCapture.cpp" />
+    <ClCompile Include="GameCaptureEngine.cpp" />
     <ClCompile Include="GameStateMonitor.cpp" />
     <ClCompile Include="ScreenCapture.cpp" />
-    <ClCompile Include="VideoProcessor.cpp" />
     <ClCompile Include="wsk.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -32,9 +32,9 @@
     <ClInclude Include="ChampionDetector.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="DXGIFullscreenCapture.h" />
+    <ClInclude Include="GameCaptureEngine.h" />
     <ClInclude Include="GameStateMonitor.h" />
     <ClInclude Include="ScreenCapture.h" />
-    <ClInclude Include="VideoProcessor.h" />
     <ClInclude Include="wsk.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

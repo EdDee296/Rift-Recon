@@ -3,7 +3,7 @@
 #include "GameStateMonitor.h"
 #include "ChampionDetector.h"
 #include "ScreenCapture.h"
-#include "VideoProcessor.h"
+#include "GameCaptureEngine.h"
 #include <atomic>
 #include <thread>
 
@@ -28,7 +28,7 @@ namespace LeagueRecorder {
         GameStateMonitor m_gameMonitor;
         ChampionDetector m_championDetector;
         ScreenCapture m_screenCapture;
-        VideoProcessor m_videoProcessor;
+        GameCaptureEngine m_gameCaptureEngine;
 
         // State flags
         std::atomic<bool> m_shouldExit;

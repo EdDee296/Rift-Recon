@@ -30,10 +30,10 @@
     <ClCompile Include="ScreenCapture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VideoProcessor.cpp">
+    <ClCompile Include="wsk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="wsk.cpp">
+    <ClCompile Include="GameCaptureEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -56,10 +56,10 @@
     <ClInclude Include="ScreenCapture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VideoProcessor.h">
+    <ClInclude Include="wsk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="wsk.h">
+    <ClInclude Include="GameCaptureEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

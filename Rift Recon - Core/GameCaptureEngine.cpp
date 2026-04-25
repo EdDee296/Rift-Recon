@@ -1,4 +1,4 @@
-#include "VideoProcessor.h"
+#include "GameCaptureEngine.h"
 #include "Common.h"
 #include <windows.h>
 #include <iomanip>
@@ -10,7 +10,7 @@
 
 namespace LeagueRecorder {
 
-    VideoProcessor::VideoProcessor(ScreenCapture& capture, ChampionDetector& detector)
+    GameCaptureEngine::GameCaptureEngine(ScreenCapture& capture, ChampionDetector& detector)
         : m_capture(capture)
         , m_detector(detector)
         , m_targetFps(10.0)
@@ -27,19 +27,19 @@ namespace LeagueRecorder {
     {
     }
 
-    VideoProcessor::~VideoProcessor() {
+    GameCaptureEngine::~GameCaptureEngine() {
         stopRecording("destructor called");
     }
 
-    bool VideoProcessor::startRecording() {
+    bool GameCaptureEngine::startRecording() {
         if (m_isRecording.load()) {
-            LOG("[VideoProcessor] Recording already in progress");
+            LOG("[GameCaptureEngine] Recording already in progress");
             return false;
         }
 
         // Make sure capture is initialized
         if (m_capture.getCaptureWidth() <= 0 || m_capture.getCaptureHeight() <= 0) {
-            LOG("[VideoProcessor] Cannot start recording - capture not initialized");
+            LOG("[GameCaptureEngine] Cannot start recording - capture not initialized");
             return false;
         }
 
@@ -52,7 +52,7 @@ namespace LeagueRecorder {
                 cv::Size(m_capture.getCaptureWidth(), m_capture.getCaptureHeight()), true);
 
             if (!m_videoWriter.isOpened()) {
-                LOG("[VideoProcessor] Could not open video file for write");
+                LOG("[GameCaptureEngine] Could not open video file for write");
                 return false;
             }
             notifyStatus("Video saving enabled - saving to: " + m_currentVideoFilename);
@@ -70,20 +70,20 @@ namespace LeagueRecorder {
 
         if (m_useBuffering) {
             // Start both capture and processing threads for buffered mode
-            m_captureThread = std::thread(&VideoProcessor::captureThread, this);
-            m_processingThread = std::thread(&VideoProcessor::processingThread, this);
+            m_captureThread = std::thread(&GameCaptureEngine::captureThread, this);
+            m_processingThread = std::thread(&GameCaptureEngine::processingThread, this);
             notifyStatus("Processing started (buffered)");
         }
         else {
             // Use original single-threaded approach
-            m_recordingThread = std::thread(&VideoProcessor::recordingThread, this);
+            m_recordingThread = std::thread(&GameCaptureEngine::recordingThread, this);
             notifyStatus("Processing started");
         }
 
         return true;
     }
 
-    void VideoProcessor::stopRecording(const std::string& reason) {
+    void GameCaptureEngine::stopRecording(const std::string& reason) {
         // Set flag for threads to exit
         m_shouldExit = true;
 
@@ -123,23 +123,23 @@ namespace LeagueRecorder {
         }
     }
 
-    bool VideoProcessor::isRecording() const {
+    bool GameCaptureEngine::isRecording() const {
         return m_isRecording.load();
     }
 
-    void VideoProcessor::setStatusCallback(StatusCallback callback) {
+    void GameCaptureEngine::setStatusCallback(StatusCallback callback) {
         m_statusCallback = callback;
     }
 
-    void VideoProcessor::setTargetFps(double fps) {
+    void GameCaptureEngine::setTargetFps(double fps) {
         m_targetFps = fps;
     }
 
-    void VideoProcessor::setMatchThreshold(double threshold) {
+    void GameCaptureEngine::setMatchThreshold(double threshold) {
         m_matchThreshold = threshold;
     }
 
-    void VideoProcessor::setBufferingEnabled(bool enabled) {
+    void GameCaptureEngine::setBufferingEnabled(bool enabled) {
         if (m_isRecording.load()) {
             notifyStatus("Cannot change buffering mode while recording");
             return;
@@ -148,7 +148,7 @@ namespace LeagueRecorder {
         notifyStatus(enabled ? "Buffering enabled" : "Buffering disabled");
     }
 
-    void VideoProcessor::setBufferSize(size_t size) {
+    void GameCaptureEngine::setBufferSize(size_t size) {
         if (m_isRecording.load()) {
             notifyStatus("Cannot change buffer size while recording");
             return;
@@ -157,7 +157,7 @@ namespace LeagueRecorder {
         notifyStatus("Buffer size set to " + std::to_string(m_maxBufferSize));
     }
 
-    void VideoProcessor::setVideoSavingEnabled(bool enabled) {
+    void GameCaptureEngine::setVideoSavingEnabled(bool enabled) {
         if (m_isRecording.load()) {
             notifyStatus("Cannot change video saving mode while recording");
             return;
@@ -166,7 +166,7 @@ namespace LeagueRecorder {
         notifyStatus(enabled ? "Video saving enabled" : "Video saving disabled");
     }
 
-    bool VideoProcessor::selectCaptureRegion() {
+    bool GameCaptureEngine::selectCaptureRegion() {
         if (m_isRecording.load()) {
             // Pause recording temporarily
             bool result = m_capture.selectCaptureRegion();
@@ -198,16 +198,16 @@ namespace LeagueRecorder {
         }
     }
 
-    std::string VideoProcessor::getCurrentVideoFilename() const {
+    std::string GameCaptureEngine::getCurrentVideoFilename() const {
         return m_currentVideoFilename;
     }
 
-    double VideoProcessor::getCurrentFps() const {
+    double GameCaptureEngine::getCurrentFps() const {
         std::lock_guard<std::mutex> lock(m_metricsMutex);
         return m_currentFps;
     }
 
-    std::string VideoProcessor::generateVideoFilename() const {
+    std::string GameCaptureEngine::generateVideoFilename() const {
         // Generate a timestamped filename
         auto now = std::chrono::system_clock::now();
         auto now_time_t = std::chrono::system_clock::to_time_t(now);
@@ -221,21 +221,21 @@ namespace LeagueRecorder {
         return ss.str();
     }
 
-    void VideoProcessor::notifyStatus(const std::string& status) {
-        LOG("[VideoProcessor] " + status);
+    void GameCaptureEngine::notifyStatus(const std::string& status) {
+        LOG("[GameCaptureEngine] " + status);
         if (m_statusCallback) {
             m_statusCallback(status);
         }
     }
 
-    void VideoProcessor::clearFrameBuffer() {
+    void GameCaptureEngine::clearFrameBuffer() {
         std::lock_guard<std::mutex> lock(m_bufferMutex);
         // Clear the queue
         std::queue<cv::Mat> empty;
         m_frameBuffer.swap(empty);
     }
 
-    void VideoProcessor::captureThread() {
+    void GameCaptureEngine::captureThread() {
         try {
             // For FPS calculation
             auto lastTime = std::chrono::high_resolution_clock::now();
@@ -343,7 +343,7 @@ namespace LeagueRecorder {
         }
     }
 
-    void VideoProcessor::processingThread() {
+    void GameCaptureEngine::processingThread() {
         try {
             auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -406,7 +406,7 @@ namespace LeagueRecorder {
         }
     }
 
-    void VideoProcessor::recordingThread() {
+    void GameCaptureEngine::recordingThread() {
         try {
             // For FPS calculation
             auto lastTime = std::chrono::high_resolution_clock::now();

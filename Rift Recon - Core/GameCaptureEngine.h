@@ -5,13 +5,13 @@
 #include <condition_variable>
 
 namespace LeagueRecorder {
-    class VideoProcessor {
+    class GameCaptureEngine {
     public:
         // Callback type for status updates
         using StatusCallback = std::function<void(const std::string&)>;
 
-        VideoProcessor(ScreenCapture& capture, ChampionDetector& detector);
-        ~VideoProcessor();
+        GameCaptureEngine(ScreenCapture& capture, ChampionDetector& detector);
+        ~GameCaptureEngine();
 
         // Start/stop recording
         bool startRecording();
